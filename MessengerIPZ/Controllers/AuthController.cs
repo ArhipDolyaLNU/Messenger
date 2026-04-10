@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using MessengerIPZ.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MessengerIPZ.Controllers
 {
@@ -9,23 +10,31 @@ namespace MessengerIPZ.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public AuthController(UserManager<User> userManager)
+        public class DataDto
+        {
+            public string Username { get; set; }
+            public string Password { get; set; }
+        }
+
+        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(string username, string password)
+        public async Task<IActionResult> Register([FromBody] DataDto model)
         {
             var user = new User
             {
-                UserName = username,
+                UserName = model.Username,
                 IsOnline = true,
                 LastSeen = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, password);
+            var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
@@ -34,19 +43,23 @@ namespace MessengerIPZ.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login([FromBody] DataDto model)
         {
-            var user = await _userManager.FindByNameAsync(username);
+            var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, false, false);
 
-            if (user == null)
-                return Unauthorized();
-
-            var valid = await _userManager.CheckPasswordAsync(user, password);
-
-            if (!valid)
-                return Unauthorized();
+            if (!result.Succeeded)
+            {
+                return Unauthorized("Invalid login");
+            }
 
             return Ok("Logged in");
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            return Ok(User.Identity.Name);
         }
     }
 }
