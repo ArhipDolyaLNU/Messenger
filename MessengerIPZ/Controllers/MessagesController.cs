@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.SignalR; 
+using MessengerIPZ.Hubs; 
 
 namespace MessengerIPZ.Controllers
 {
@@ -15,11 +16,13 @@ namespace MessengerIPZ.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly IHubContext<ChatHub> _hubContext; 
 
-        public MessagesController(ApplicationDbContext context, UserManager<User> userManager)
+        public MessagesController(ApplicationDbContext context, UserManager<User> userManager, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _userManager = userManager;
+            _hubContext = hubContext;
         }
 
         public class SendMessageDto
@@ -35,7 +38,6 @@ namespace MessengerIPZ.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
-            // Перевіряємо, чи має юзер право писати в цей чат (чи є він учасником)
             var isMember = await _context.ChannelMembers
                 .AnyAsync(cm => cm.ChannelId == model.ChannelId && cm.UserId == user.Id);
 
@@ -52,29 +54,31 @@ namespace MessengerIPZ.Controllers
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-            return Ok(new
+            var responseData = new
             {
-                message.Id,
-                message.Content,
-                message.Timestamp,
+                Id = message.Id,
+                Content = message.Content,
+                Timestamp = message.Timestamp,
                 Sender = user.UserName
-            });
+            };
+
+            await _hubContext.Clients.Group(model.ChannelId.ToString())
+                .SendAsync("ReceiveMessage", responseData.Sender, responseData.Content);
+
+            return Ok(responseData);
         }
 
-        // Отримання всіх повідомлень конкретного чату
         [HttpGet("{channelId}")]
         public async Task<IActionResult> GetMessages(Guid channelId)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
-            // Перевіряємо, чи має юзер право читати цей чат
             var isMember = await _context.ChannelMembers
                 .AnyAsync(cm => cm.ChannelId == channelId && cm.UserId == user.Id);
 
             if (!isMember) return StatusCode(403, "Ви не є учасником цього чату.");
 
-            // Дістаємо повідомлення, сортуємо за часом і підтягуємо імена відправників
             var messages = await _context.Messages
                 .Where(m => m.ChannelId == channelId)
                 .Include(m => m.User)

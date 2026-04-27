@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>MessengerIPZ - Real-time</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .container {
+            width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            transition: 0.3s;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+        .channels, .messages {
+            border: 1px solid #eee;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+
+        .channels {
+            height: 150px;
+            margin-bottom: 20px;
+        }
+
+        .messages {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg-item {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 15px;
+            width: fit-content;
+            max-width: 80%;
+        }
+
+        .channel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Авторизація</h2>
+        <input id="usernameInput" placeholder="Логін">
+        <input id="passwordInput" type="password" placeholder="Пароль">
+        <button onclick="register()">Реєстрація</button>
+        <button onclick="login()">Увійти</button>
+
+        <hr>
+
+        <h2>Канали</h2>
+        <input id="channelName" placeholder="Назва нового каналу">
+        <button onclick="createChannel()">Створити</button>
+        <div class="channels" id="channelsList"></div>
+
+        <hr>
+
+        <h2 id="chatHeader">Чат (оберіть канал)</h2>
+        <div class="messages" id="messagesBox"></div>
+
+        <div style="display: flex; margin-top: 10px;">
+            <input id="messageInput" style="flex: 1;" placeholder="Напишіть повідомлення...">
+            <button onclick="sendMessage()">Відправити</button>
+        </div>
+    </div>
+
+    <script>
+        const API = "https://localhost:7210/api";
+        let currentChannelId = null;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveMessage", function (sender, content) {
+            appendMessageToScreen(sender, content);
+        });
+
+        connection.start().catch(err => console.error("SignalR Error: ", err));
+
+        function appendMessageToScreen(sender, content) {
+            const div = document.createElement("div");
+            div.className = "msg-item";
+            div.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            messagesBox.appendChild(div);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        async function register() {
+            const res = await fetch(API + "/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+            });
+            alert(await res.text());
+        }
+
+        async function login() {
+            const res = await fetch(API + "/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+            });
+            const text = await res.text();
+            alert(text);
+            if (res.ok) loadChannels();
+        }
+
+        async function createChannel() {
+            await fetch(API + "/channels", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ name: channelName.value })
+            });
+            channelName.value = "";
+            loadChannels();
+        }
+
+        async function loadChannels() {
+            const res = await fetch(API + "/channels", { credentials: "include" });
+            const data = await res.json();
+            channelsList.innerHTML = "";
+            data.forEach(c => {
+                const div = document.createElement("div");
+                div.className = "channel-item";
+                div.innerHTML = `
+                        <span><b># ${c.name}</b> (учасників: ${c.memberCount})</span>
+                        <div>
+                            <button onclick="joinChannel('${c.id}')">Вступити</button>
+                            <button style="background:#28a745" onclick="openChannel('${c.id}', '${c.name}')">Відкрити</button>
+                        </div>
+                    `;
+                channelsList.appendChild(div);
+            });
+        }
+
+        async function joinChannel(id) {
+            const res = await fetch(API + `/channels/${id}/join`, {
+                method: "POST",
+                credentials: "include"
+            });
+            alert(await res.text());
+            loadChannels();
+        }
+
+        async function openChannel(id, name) {
+            if (currentChannelId) {
+                connection.invoke("LeaveChat", currentChannelId.toString());
+            }
+
+            currentChannelId = id;
+            chatHeader.innerText = "Чат: " + name;
+
+            connection.invoke("JoinChat", id.toString());
+
+            loadMessages();
+        }
+
+        async function loadMessages() {
+            if (!currentChannelId) return;
+            const res = await fetch(API + "/messages/" + currentChannelId, { credentials: "include" });
+            const data = await res.json();
+            messagesBox.innerHTML = "";
+            data.forEach(m => appendMessageToScreen(m.senderName, m.content));
+        }
+
+        async function sendMessage() {
+            if (!currentChannelId) return alert("Спочатку оберіть канал!");
+            if (!messageInput.value.trim()) return;
+
+            const res = await fetch(API + "/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    channelId: currentChannelId,
+                    content: messageInput.value
+                })
+            });
+
+            if (res.ok) {
+                messageInput.value = "";
+            }
+        }
+
+        messageInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+</html>

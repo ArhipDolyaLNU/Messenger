@@ -1,30 +1,52 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk" data-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MessengerIPZ</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MessengerIPZ.styles.css" asp-append-version="true" />
+    <script>
+        // Скрипт ініціалізації теми (щоб не було "блимання" білим при завантаженні)
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MessengerIPZ</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-sm navbar-dark border-bottom box-shadow mb-4">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MessengerIPZ</a>
+                <div class="d-flex align-items-center order-sm-last ms-2">
+                    <button onclick="toggleTheme()" class="btn-theme-toggle me-2" id="themeBtn">🌙</button>
+                </div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Home" asp-action="Home">Мій Чат</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-light">@User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <button onclick="logout()" class="btn btn-outline-light ms-2 btn-sm mt-1">Вийти</button>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link text-light" asp-controller="Home" asp-action="Login">Увійти</a></li>
+                            <li class="nav-item"><a class="nav-link text-light" asp-controller="Home" asp-action="Register">Реєстрація</a></li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -36,14 +58,38 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - MessengerIPZ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="footer text-muted py-3">
+        <div class="container text-center">
+            &copy; 2026 - MessengerIPZ
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeBtn(newTheme);
+        }
+
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('themeBtn');
+            btn.innerHTML = theme === 'light' ? '🌙' : '☀️';
+        }
+
+        async function logout() {
+            const response = await fetch('/api/Auth/logout', { method: 'POST' });
+            if (response.ok) window.location.href = '/Home/Index';
+        }
+
+        // Встановлюємо іконку при завантаженні
+        updateThemeBtn(localStorage.getItem('theme') || 'light');
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

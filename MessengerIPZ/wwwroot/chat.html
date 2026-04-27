@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест SignalR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        #messagesList {
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Мій перший SignalR Чат</h2>
+
+    <div>
+        <input type="text" id="userInput" placeholder="Ваше ім'я" />
+        <input type="text" id="messageInput" placeholder="Повідомлення..." />
+        <button id="sendButton" disabled>Відправити</button>
+    </div>
+
+    <hr />
+    <div id="messagesList"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+
+        const connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+        connection.on("ReceiveMessage", function (user, message) {
+            const msgElement = document.createElement("div");
+            msgElement.innerHTML = `<strong>${user}</strong>: ${message}`;
+            document.getElementById("messagesList").appendChild(msgElement);
+        });
+
+        connection.start().then(function () {
+            document.getElementById("sendButton").disabled = false;
+            console.log("Підключено до SignalR!");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        document.getElementById("sendButton").addEventListener("click", function (event) {
+            const user = document.getElementById("userInput").value || "Анонім";
+            const message = document.getElementById("messageInput").value;
+
+            connection.invoke("SendMessage", user, message).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            document.getElementById("messageInput").value = "";
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>

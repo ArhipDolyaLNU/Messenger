@@ -27,9 +27,30 @@ builder.Services.AddIdentity<User, IdentityRole>(options => {
 .AddDefaultTokenProviders();
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSignalR();
 builder.Services.AddSwaggerGen();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("cors", policy =>
+    {
+        policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("cors");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -56,6 +77,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllers();
+app.MapHub<MessengerIPZ.Hubs.ChatHub>("/chatHub");
 app.MapDefaultControllerRoute();
 
 app.Run();

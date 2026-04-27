@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "Вхід";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 rounded-lg">
+            <div class="card-header bg-transparent text-center py-3">
+                <h3 class="mb-0 text-primary">Авторизація</h3>
+            </div>
+            <div class="card-body p-4">
+                <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label" style="opacity: 0.8;">Ім'я користувача</label>
+                        <input type="text" class="form-control" name="username" id="username" required placeholder="Введіть логін">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" style="opacity: 0.8;">Пароль</label>
+                        <input type="password" class="form-control" name="password" id="password" required placeholder="Введіть пароль">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Увійти</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center bg-transparent py-3">
+                <span style="opacity: 0.8;">Ще не зареєстровані?</span> <a href="/Home/Register" class="text-primary text-decoration-none">Створити акаунт</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const errorAlert = document.getElementById("errorAlert");
+        errorAlert.classList.add("d-none");
+
+        const DataDto = {
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value
+        };
+
+        const response = await fetch("/api/Auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(DataDto)
+        });
+
+        if (response.ok) {
+            window.location.href = '/Home/Home';
+        } else {
+            errorAlert.textContent = "Невірний логін або пароль!";
+            errorAlert.classList.remove("d-none");
+        }
+    });
+</script>

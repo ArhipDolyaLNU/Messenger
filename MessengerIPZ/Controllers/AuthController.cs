@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using MessengerIPZ.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
+using System;
 
 namespace MessengerIPZ.Controllers
 {
@@ -33,7 +35,6 @@ namespace MessengerIPZ.Controllers
                 IsOnline = true,
                 LastSeen = DateTime.UtcNow
             };
-
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
@@ -46,13 +47,20 @@ namespace MessengerIPZ.Controllers
         public async Task<IActionResult> Login([FromBody] DataDto model)
         {
             var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, false, false);
-
             if (!result.Succeeded)
             {
                 return Unauthorized("Invalid login");
             }
 
             return Ok("Logged in");
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return Ok("Logged out");
         }
 
         [Authorize]

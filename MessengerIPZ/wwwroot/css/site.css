@@ -1,22 +1,67 @@
-html {
-  font-size: 14px;
+/* Константи кольорів */
+:root {
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --navbar-bg: #0d6efd;
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-text: #212529;
+    --border-color: #dee2e6;
+    --chat-msg-bg: #e9ecef;
+    --chat-msg-text: #212529;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+/* Кольори для темної теми */
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --navbar-bg: #1f1f1f;
+    --card-bg: #1e1e1e;
+    --input-bg: #2d2d2d;
+    --input-text: #ffffff;
+    --border-color: #333333;
+    --chat-msg-bg: #2d2d2d;
+    --chat-msg-text: #e0e0e0;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+html, body {
+    height: 100%;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    transition: none;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
 }
 
-body {
-  margin-bottom: 60px;
+.form-control {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--border-color) !important;
+}
+
+    .form-control:focus {
+        background-color: var(--input-bg) !important;
+        color: var(--input-text) !important;
+    }
+
+.navbar {
+    background-color: var(--navbar-bg) !important;
+}
+
+footer {
+    background-color: var(--card-bg) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+.btn-theme-toggle {
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: transparent;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
 }
