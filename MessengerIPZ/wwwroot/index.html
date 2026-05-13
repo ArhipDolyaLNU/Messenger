@@ -175,12 +175,12 @@
                 const div = document.createElement("div");
                 div.className = "channel-item";
                 div.innerHTML = `
-                        <span><b># ${c.name}</b> (учасників: ${c.memberCount})</span>
-                        <div>
-                            <button onclick="joinChannel('${c.id}')">Вступити</button>
-                            <button style="background:#28a745" onclick="openChannel('${c.id}', '${c.name}')">Відкрити</button>
-                        </div>
-                    `;
+                            <span><b># ${c.name}</b> (учасників: ${c.memberCount})</span>
+                            <div>
+                                <button onclick="joinChannel('${c.id}')">Вступити</button>
+                                <button style="background:#28a745" onclick="openChannel('${c.id}', '${c.name}')">Відкрити</button>
+                            </div>
+                        `;
                 channelsList.appendChild(div);
             });
         }
@@ -215,9 +215,36 @@
             data.forEach(m => appendMessageToScreen(m.senderName, m.content));
         }
 
+        const emojiMap = {
+            ":)": "😁",
+            ":-)": "😁",
+            ":D": "😃",
+            ":(": "😟",
+            ":-(": "😢",
+            ";)": "😉",
+            "<3": "❤️",
+            ":P": "😛",
+            ":p": "😛",
+            "XD": "😆",
+            "xd": "😆",
+            ":/": "😕"
+        };
+
+        function replaceEmojis(text) {
+            let processedText = text;
+            for (const [emoticon, emoji] of Object.entries(emojiMap)) {
+                if (processedText.includes(emoticon)) {
+                    processedText = processedText.split(emoticon).join(emoji);
+                }
+            }
+            return processedText;
+        }
+
         async function sendMessage() {
             if (!currentChannelId) return alert("Спочатку оберіть канал!");
             if (!messageInput.value.trim()) return;
+
+            const finalMessage = replaceEmojis(messageInput.value);
 
             const res = await fetch(API + "/messages", {
                 method: "POST",
@@ -225,7 +252,7 @@
                 credentials: "include",
                 body: JSON.stringify({
                     channelId: currentChannelId,
-                    content: messageInput.value
+                    content: finalMessage
                 })
             });
 

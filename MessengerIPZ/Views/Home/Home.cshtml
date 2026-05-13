@@ -177,14 +177,43 @@
             data.forEach(m => appendMessageToScreen(m.senderName, m.content));
         }
 
+        const emojiMap = {
+            ":)": "😁",
+            ":-)": "😁",
+            ":D": "😃",
+            ":(": "😟",
+            ":-(": "😢",
+            ";)": "😉",
+            "<3": "❤️",
+            ":P": "😛",
+            ":p": "😛",
+            "XD": "😆",
+            "xd": "😆",
+            ":/": "😕"
+        };
+
+        function replaceEmojis(text) {
+            let processedText = text;
+            for (const [emoticon, emoji] of Object.entries(emojiMap)) {
+                if (processedText.includes(emoticon)) {
+                    processedText = processedText.split(emoticon).join(emoji);
+                }
+            }
+            return processedText;
+        }
+
         async function sendMessage() {
             const input = document.getElementById("messageInput");
             if (!currentChannelId || !input.value.trim()) return;
+
+            const finalMessage = replaceEmojis(input.value);
+
             await fetch(API + "/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ channelId: currentChannelId, content: input.value })
+                body: JSON.stringify({ channelId: currentChannelId, content: finalMessage })
             });
+
             input.value = "";
         }
 
