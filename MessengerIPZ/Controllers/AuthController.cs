@@ -69,5 +69,26 @@ namespace MessengerIPZ.Controllers
         {
             return Ok(User.Identity.Name);
         }
+
+        [Authorize]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+
+            // Повертаємо всіх користувачів, крім поточного
+            var users = _userManager.Users
+                .Where(u => u.Id != currentUser.Id)
+                .Select(u => new {
+                    u.Id,
+                    u.UserName,
+                    u.IsOnline,
+                    u.LastSeen
+                })
+                .ToList();
+
+            return Ok(users);
+        }
     }
 }
