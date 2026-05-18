@@ -65,3 +65,24 @@ footer {
     padding: 4px 12px;
     border-radius: 4px;
 }
+
+[data-theme="dark"] .modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--border-color) !important;
+}
+
+    [data-theme="dark"] .form-select:focus {
+        background-color: var(--input-bg) !important;
+        color: var(--input-text) !important;
+    }
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1);
+}

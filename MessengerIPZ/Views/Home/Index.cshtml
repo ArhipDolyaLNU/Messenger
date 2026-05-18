@@ -3,18 +3,93 @@
 }
 
 <div class="text-center mt-5">
-    <h1 class="display-4 fw-bold text-primary mb-3">Ласкаво просимо до MessengerIPZ</h1>
-    <p class="lead text-muted mb-5">Простий та швидкий спосіб спілкуватися з друзями та колегами у реальному часі.</p>
+
+    <h1 id="homeTitle"
+        class="display-4 fw-bold text-primary mb-3">
+
+        Ласкаво просимо до MessengerIPZ
+
+    </h1>
+
+    <p id="homeSubtitle"
+       class="lead text-muted mb-5">
+
+        Простий та швидкий спосіб спілкуватися з друзями та колегами у реальному часі.
+
+    </p>
 
     <div class="d-flex justify-content-center gap-3">
+
         @if (User.Identity.IsAuthenticated)
         {
-            <a href="/Home/Home" class="btn btn-success btn-lg px-5 shadow-sm">Перейти до чатів</a>
+            <a id="goChatsBtn"
+               href="/Home/Home"
+               class="btn btn-success btn-lg px-5 shadow-sm">
+
+                Перейти до чатів
+
+            </a>
         }
         else
         {
-            <a href="/Home/Login" class="btn btn-primary btn-lg px-5 shadow-sm">Увійти</a>
-            <a href="/Home/Register" class="btn btn-outline-primary btn-lg px-5 shadow-sm">Зареєструватись</a>
+            <a id="homeLoginBtn"
+               href="/Home/Login"
+               class="btn btn-primary btn-lg px-5 shadow-sm">
+
+                Увійти
+
+            </a>
+
+            <a id="homeRegisterBtn"
+               href="/Home/Register"
+               class="btn btn-outline-primary btn-lg px-5 shadow-sm">
+
+                Зареєструватись
+
+            </a>
         }
+
     </div>
 </div>
+
+<script>
+
+    function applyIndexTranslations() {
+
+        document.getElementById("homeTitle").innerText =
+            getText("welcome");
+
+        document.getElementById("homeSubtitle").innerText =
+            getText("subtitle");
+
+        const goChatsBtn =
+            document.getElementById("goChatsBtn");
+
+        if (goChatsBtn) {
+
+            goChatsBtn.innerText =
+                getText("goChats");
+        }
+
+        const homeLoginBtn =
+            document.getElementById("homeLoginBtn");
+
+        if (homeLoginBtn) {
+
+            homeLoginBtn.innerText =
+                getText("login");
+        }
+
+        const homeRegisterBtn =
+            document.getElementById("homeRegisterBtn");
+
+        if (homeRegisterBtn) {
+
+            homeRegisterBtn.innerText =
+                getText("register");
+        }
+    }
+
+    applyIndexTranslations();
+
+</script>

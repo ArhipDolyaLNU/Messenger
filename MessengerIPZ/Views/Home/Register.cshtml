@@ -4,77 +4,238 @@
 
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
+
         <div class="card shadow-sm border-0 rounded-lg">
+
             <div class="card-header bg-transparent text-center py-3">
-                <h3 class="mb-0 text-primary">Створення акаунту</h3>
+
+                <h3 id="registerTitle"
+                    class="mb-0 text-primary">
+
+                    Створення акаунту
+
+                </h3>
+
             </div>
+
             <div class="card-body p-4">
-                <div id="msgAlert" class="alert d-none" role="alert"></div>
+
+                <div id="msgAlert"
+                     class="alert d-none"
+                     role="alert">
+                </div>
 
                 <form id="registerForm">
+
                     <div class="mb-3">
-                        <label class="form-label" style="opacity: 0.8;">Ім'я користувача</label>
-                        <input type="text" class="form-control" id="username" required placeholder="Придумайте логін">
+
+                        <label id="registerUsernameLabel"
+                               class="form-label"
+                               style="opacity: 0.8;">
+
+                            Ім'я користувача
+
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="username"
+                               required
+                               placeholder="Придумайте логін">
+
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" style="opacity: 0.8;">Пароль (мінімум 6 символів)</label>
-                        <input type="password" class="form-control" id="password" required minlength="6" placeholder="Придумайте пароль">
+
+                        <label id="registerPasswordLabel"
+                               class="form-label"
+                               style="opacity: 0.8;">
+
+                            Пароль (мінімум 6 символів)
+
+                        </label>
+
+                        <input type="password"
+                               class="form-control"
+                               id="password"
+                               required
+                               minlength="6"
+                               placeholder="Придумайте пароль">
+
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" style="opacity: 0.8;">Підтвердження паролю</label>
-                        <input type="password" class="form-control" id="passwordConfirm" required placeholder="Повторіть пароль">
+
+                        <label id="confirmPasswordLabel"
+                               class="form-label"
+                               style="opacity: 0.8;">
+
+                            Підтвердження паролю
+
+                        </label>
+
+                        <input type="password"
+                               class="form-control"
+                               id="passwordConfirm"
+                               required
+                               placeholder="Повторіть пароль">
+
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">Зареєструватися</button>
+
+                        <button id="registerBtn"
+                                type="submit"
+                                class="btn btn-primary btn-lg">
+
+                            Зареєструватися
+
+                        </button>
+
                     </div>
+
                 </form>
+
             </div>
+
             <div class="card-footer text-center bg-transparent py-3">
-                <span style="opacity: 0.8;">Вже маєте акаунт?</span> <a href="/Home/Login" class="text-primary text-decoration-none">Увійти</a>
+
+                <span id="alreadyAccountText"
+                      style="opacity: 0.8;">
+
+                    Вже маєте акаунт?
+
+                </span>
+
+                <a id="loginLink"
+                       href="/Home/Login"
+                       class="text-primary text-decoration-none">
+
+                    Увійти
+
+                </a>
+
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById("registerForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
 
-        const msgAlert = document.getElementById("msgAlert");
-        msgAlert.className = "alert d-none";
+    function applyRegisterTranslations() {
 
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
-        const passwordConfirm = document.getElementById("passwordConfirm").value;
+        document.getElementById("registerTitle").innerText =
+            getText("registerTitle");
 
-        if (password !== passwordConfirm) {
-            msgAlert.textContent = "Паролі не співпадають!";
-            msgAlert.classList.add("alert-danger");
-            msgAlert.classList.remove("d-none");
-            return;
-        }
+        document.getElementById("registerUsernameLabel").innerText =
+            getText("username");
 
-        const DataDto = { username, password };
+        document.getElementById("registerPasswordLabel").innerText =
+            getText("registerPassword");
 
-        const response = await fetch("/api/Auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(DataDto)
+        document.getElementById("confirmPasswordLabel").innerText =
+            getText("confirmPassword");
+
+        document.getElementById("username").placeholder =
+            getText("createLogin");
+
+        document.getElementById("password").placeholder =
+            getText("createPassword");
+
+        document.getElementById("passwordConfirm").placeholder =
+            getText("repeatPassword");
+
+        document.getElementById("registerBtn").innerText =
+            getText("register");
+
+        document.getElementById("alreadyAccountText").innerText =
+            getText("alreadyAccount");
+
+        document.getElementById("loginLink").innerText =
+            getText("login");
+    }
+
+    applyRegisterTranslations();
+
+    document.getElementById("registerForm")
+        .addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            const msgAlert =
+                document.getElementById("msgAlert");
+
+            msgAlert.className = "alert d-none";
+
+            const username =
+                document.getElementById("username").value;
+
+            const password =
+                document.getElementById("password").value;
+
+            const passwordConfirm =
+                document.getElementById("passwordConfirm").value;
+
+            if (password !== passwordConfirm) {
+
+                msgAlert.textContent =
+                    getText("passwordMismatch");
+
+                msgAlert.classList.add("alert-danger");
+
+                msgAlert.classList.remove("d-none");
+
+                return;
+            }
+
+            const DataDto = {
+                username,
+                password
+            };
+
+            const response =
+                await fetch("/api/Auth/register", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(DataDto)
+                });
+
+            if (response.ok) {
+
+                msgAlert.textContent =
+                    getText("successRegister");
+
+                msgAlert.classList.add("alert-success");
+
+                msgAlert.classList.remove("d-none");
+
+                setTimeout(() =>
+                    window.location.href = '/Home/Login',
+                    1500
+                );
+            }
+            else {
+
+                const errorData =
+                    await response.json();
+
+                msgAlert.textContent =
+                    "Error: "
+                    + (
+                        errorData[0]?.description
+                        || getText("registerError")
+                    );
+
+                msgAlert.classList.add("alert-danger");
+
+                msgAlert.classList.remove("d-none");
+            }
         });
 
-        if (response.ok) {
-            msgAlert.textContent = "Реєстрація успішна! Перенаправлення...";
-            msgAlert.classList.add("alert-success");
-            msgAlert.classList.remove("d-none");
-            setTimeout(() => window.location.href = '/Home/Login', 1500);
-        } else {
-            const errorData = await response.json();
-            msgAlert.textContent = "Помилка: " + (errorData[0]?.description || "Не вдалося зареєструватись.");
-            msgAlert.classList.add("alert-danger");
-            msgAlert.classList.remove("d-none");
-        }
-    });
 </script>

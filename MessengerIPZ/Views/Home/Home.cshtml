@@ -68,20 +68,56 @@
 
 <div class="chat-container">
     <div class="channels-panel">
-        <h4 class="mb-3 text-primary">Кімнати</h4>
+
+        <h4 id="roomsTitle" class="mb-3 text-primary">
+            Кімнати
+        </h4>
+
         <div class="input-group mb-4 shadow-sm">
-            <input type="text" id="channelName" class="form-control" placeholder="Назва">
+
+            <input type="text"
+                   id="channelName"
+                   class="form-control"
+                   placeholder="Назва">
+
             <button class="btn btn-primary" onclick="createChannel()">+</button>
+
         </div>
+
         <div id="channelsList"></div>
+
     </div>
 
     <div class="chat-panel">
-        <h4 id="chatHeader" class="border-bottom pb-2 text-primary">Оберіть канал</h4>
-        <div id="messagesBox" class="messages-box shadow-sm"></div>
+
+        <h4 id="chatHeader"
+            class="border-bottom pb-2 text-primary">
+
+            Оберіть канал
+
+        </h4>
+
+        <div id="messagesBox"
+             class="messages-box shadow-sm">
+        </div>
+
         <div class="input-group shadow-sm">
-            <input type="text" id="messageInput" class="form-control" placeholder="Повідомлення..." disabled>
-            <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()" disabled>></button>
+
+            <input type="text"
+                   id="messageInput"
+                   class="form-control"
+                   placeholder="Повідомлення..."
+                   disabled>
+
+            <button class="btn btn-primary"
+                    id="sendBtn"
+                    onclick="sendMessage()"
+                    disabled>
+
+                >
+
+            </button>
+
         </div>
     </div>
 </div>
@@ -107,7 +143,36 @@
             appendMessageToScreen(sender, decrypted, timestamp);
         });
 
-        connection.start().then(() => loadChannels());
+        connection.start().then(() => { 
+
+            applyHomeTranslations();
+
+            loadChannels();
+
+        });
+        function applyHomeTranslations() {
+
+            document.getElementById("roomsTitle").innerText =
+                getText("rooms");
+
+            const chatHeader =
+                document.getElementById("chatHeader");
+
+            if (
+                chatHeader.innerText === "Оберіть канал"
+                || chatHeader.innerText === "Select channel"
+            ) {
+
+                chatHeader.innerText =
+                    getText("channel");
+            }
+
+            document.getElementById("channelName").placeholder =
+                getText("channelName");
+
+            document.getElementById("messageInput").placeholder =
+                getText("message");
+        }
 
         function formatMessageTime(date) {
             const now = new Date();
@@ -185,10 +250,26 @@
                         <b># ${c.name}</b>
                         <span class="badge bg-secondary">${c.memberCount}</span>
                     </div>
+
                     <div class="mt-2 d-flex gap-1">
-                        <button class="btn btn-sm btn-outline-success flex-grow-1" onclick="joinChannel('${c.id}')">Вступити</button>
-                        <button class="btn btn-sm btn-primary flex-grow-1" onclick="openChannel('${c.id}', '${c.name}')">Відкрити</button>
-                    </div>`;
+
+                        <button class="btn btn-sm btn-outline-success flex-grow-1"
+                                onclick="joinChannel('${c.id}')">
+
+                            ${getText('join')}
+
+                        </button>
+
+                        <button class="btn btn-sm btn-primary flex-grow-1"
+                                onclick="openChannel('${c.id}', '${c.name}')">
+
+                            ${getText('open')}
+
+                        </button>
+
+                    </div>
+                `;
+
                 list.appendChild(div);
             });
         }
@@ -201,7 +282,8 @@
         async function openChannel(id, name) {
             if (currentChannelId) connection.invoke("LeaveChat", currentChannelId.toString());
             currentChannelId = id;
-            document.getElementById("chatHeader").innerText = "Чат: #" + name;
+            document.getElementById("chatHeader").innerText =
+                getText("chatPrefix") + name;
             connection.invoke("JoinChat", id.toString());
             loadMessages();
         }

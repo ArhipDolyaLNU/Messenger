@@ -4,92 +4,478 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MessengerIPZ</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <script src="~/js/translations.js" asp-append-version="true"></script>
+
     <script>
-        // Скрипт ініціалізації теми (щоб не було "блимання" білим при завантаженні)
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+            // Скрипт ініціалізації теми (щоб не було "блимання" білим при завантаженні)
+            const savedTheme =
+                localStorage.getItem('theme') || 'light';
+
+            document.documentElement
+                .setAttribute('data-theme', savedTheme);
     </script>
 </head>
+
 <body>
+
     <header>
+
         <nav class="navbar navbar-expand-sm navbar-dark border-bottom box-shadow mb-4">
+
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MessengerIPZ</a>
+
+                <a class="navbar-brand fw-bold"
+                       asp-area=""
+                       asp-controller="Home"
+                       asp-action="Index">
+
+                    MessengerIPZ
+
+                </a>
+
                 <div class="d-flex align-items-center order-sm-last ms-2">
-                    <button onclick="toggleTheme()" class="btn-theme-toggle me-2" id="themeBtn">🌙</button>
+
+                    <!-- Кнопка налаштувань -->
+                    <button class="btn-theme-toggle me-2"
+                            data-bs-toggle="modal"
+                            data-bs-target="#settingsModal">
+
+                        ⚙️
+
+                    </button>
+
+                    <!-- Кнопка теми -->
+                    <button onclick="toggleTheme()"
+                            class="btn-theme-toggle me-2"
+                            id="themeBtn">
+
+                        🌙
+
+                    </button>
+
                 </div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".navbar-collapse">
+
                     <span class="navbar-toggler-icon"></span>
+
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
+
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Home" asp-action="Home">Мій Чат</a>
+
+                                <a id="navChat"
+                                       class="nav-link text-light"
+                                       asp-controller="Home"
+                                       asp-action="Home">
+
+                                    Мій Чат
+
+                                </a>
+
                             </li>
                         }
+
                     </ul>
+
                     <ul class="navbar-nav">
+
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-light">@User.Identity.Name</span>
+
+                                <span class="nav-link text-light">
+
+                                    @User.Identity.Name
+
+                                </span>
+
                             </li>
+
                             <li class="nav-item">
-                                <button onclick="logout()" class="btn btn-outline-light ms-2 btn-sm mt-1">Вийти</button>
+
+                                <button id="logoutBtn"
+                                        onclick="logout()"
+                                        class="btn btn-outline-light ms-2 btn-sm mt-1">
+
+                                    Вийти
+
+                                </button>
+
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item"><a class="nav-link text-light" asp-controller="Home" asp-action="Login">Увійти</a></li>
-                            <li class="nav-item"><a class="nav-link text-light" asp-controller="Home" asp-action="Register">Реєстрація</a></li>
+                            <li class="nav-item">
+
+                                <a id="navLogin"
+                                       class="nav-link text-light"
+                                       asp-controller="Home"
+                                       asp-action="Login">
+
+                                    Увійти
+
+                                </a>
+
+                            </li>
+
+                            <li class="nav-item">
+
+                                <a id="navRegister"
+                                       class="nav-link text-light"
+                                       asp-controller="Home"
+                                       asp-action="Register">
+
+                                    Реєстрація
+
+                                </a>
+
+                            </li>
                         }
+
                     </ul>
+
                 </div>
             </div>
         </nav>
+
     </header>
+
     <div class="container">
+
         <main role="main" class="pb-3">
+
             @RenderBody()
+
         </main>
+
     </div>
 
     <footer class="footer text-muted py-3">
+
         <div class="container text-center">
+
             &copy; 2026 - MessengerIPZ
+
         </div>
+
     </footer>
 
+    <!-- Вікно налаштувань -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title"
+                        id="settingsTitle">
+
+                        Налаштування
+
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- Мова -->
+                    <div class="mb-3">
+
+                        <label class="form-label"
+                               id="languageLabel">
+
+                            Мова інтерфейсу
+
+                        </label>
+
+                        <select id="languageSelect"
+                                class="form-select">
+
+                            <option value="uk">
+                                Українська
+                            </option>
+
+                            <option value="en">
+                                English
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Шрифт -->
+                    <div class="mb-3">
+
+                        <label class="form-label"
+                               id="fontLabel">
+
+                            Шрифт
+
+                        </label>
+
+                        <select id="fontSelect"
+                                class="form-select">
+
+                            <option value="Arial">
+                                Arial
+                            </option>
+
+                            <option value="Verdana">
+                                Verdana
+                            </option>
+
+                            <option value="Tahoma">
+                                Tahoma
+                            </option>
+
+                            <option value="Times New Roman">
+                                Times New Roman
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Розмір шрифту -->
+                    <div class="mb-3">
+
+                        <label class="form-label"
+                               id="fontSizeLabel">
+
+                            Розмір шрифту
+
+                        </label>
+
+                        <select id="fontSizeSelect"
+                                class="form-select">
+
+                            <option value="14px">14</option>
+                            <option value="16px">16</option>
+                            <option value="18px">18</option>
+                            <option value="20px">20</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            onclick="saveSettings()"
+                            id="saveBtn">
+
+                        Зберегти
+
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeBtn(newTheme);
-        }
+            function toggleTheme() {
 
-        function updateThemeBtn(theme) {
-            const btn = document.getElementById('themeBtn');
-            btn.innerHTML = theme === 'light' ? '🌙' : '☀️';
-        }
+                const html =
+                    document.documentElement;
 
-        async function logout() {
-            const response = await fetch('/api/Auth/logout', { method: 'POST' });
-            if (response.ok) window.location.href = '/Home/Index';
-        }
+                const currentTheme =
+                    html.getAttribute('data-theme');
 
-        // Встановлюємо іконку при завантаженні
-        updateThemeBtn(localStorage.getItem('theme') || 'light');
+                const newTheme =
+                    currentTheme === 'light'
+                        ? 'dark'
+                        : 'light';
+
+                html.setAttribute(
+                    'data-theme',
+                    newTheme
+                );
+
+                localStorage.setItem(
+                    'theme',
+                    newTheme
+                );
+
+                updateThemeBtn(newTheme);
+            }
+
+            function updateThemeBtn(theme) {
+
+                const btn =
+                    document.getElementById('themeBtn');
+
+                btn.innerHTML =
+                    theme === 'light'
+                        ? '🌙'
+                        : '☀️';
+            }
+
+            async function logout() {
+
+                const response =
+                    await fetch('/api/Auth/logout', {
+
+                        method: 'POST'
+                    });
+
+                if (response.ok) {
+
+                    window.location.href =
+                        '/Home/Index';
+                }
+            }
+
+            // Збереження налаштувань
+            function saveSettings() {
+
+                const lang =
+                    document.getElementById('languageSelect').value;
+
+                const font =
+                    document.getElementById('fontSelect').value;
+                
+                const fontSize =
+                    document.getElementById('fontSizeSelect').value;
+
+
+                localStorage.setItem(
+                    'lang',
+                    lang
+                );
+
+                localStorage.setItem(
+                    'font',
+                    font
+                );
+
+                localStorage.setItem(
+                    'fontSize',
+                    fontSize
+                );
+
+                applySettings();
+
+                location.reload();
+            }
+
+            // Застосування налаштувань
+            function applySettings() {
+
+                const lang =
+                    localStorage.getItem('lang') || 'uk';
+
+                const font =
+                    localStorage.getItem('font') || 'Arial';
+
+                const fontSize =
+                    localStorage.getItem('fontSize') || '16px';
+
+                // Шрифт
+                document.body.style.fontFamily = font;
+                document.body.style.fontSize = fontSize;
+
+                // Встановлення select
+                document.getElementById('languageSelect').value =
+                    lang;
+
+                document.getElementById('fontSelect').value =
+                    font;
+
+                document.getElementById('fontSizeSelect').value =
+                    fontSize;
+
+                // Переклад
+                applyLayoutTranslations();
+            }
+
+            // Переклад інтерфейсу
+            function applyLayoutTranslations() {
+
+                const navChat =
+                    document.getElementById('navChat');
+
+                if (navChat)
+                    navChat.innerText =
+                        getText('chat');
+
+                const navLogin =
+                    document.getElementById('navLogin');
+
+                if (navLogin)
+                    navLogin.innerText =
+                        getText('login');
+
+                const navRegister =
+                    document.getElementById('navRegister');
+
+                if (navRegister)
+                    navRegister.innerText =
+                        getText('register');
+
+                const logoutBtn =
+                    document.getElementById('logoutBtn');
+
+                if (logoutBtn)
+                    logoutBtn.innerText =
+                        getText('logout');
+
+                document.getElementById('settingsTitle').innerText =
+                    getText('settings');
+
+                document.getElementById('languageLabel').innerText =
+                    getText('language');
+
+                document.getElementById('fontLabel').innerText =
+                    getText('font');
+
+                document.getElementById('fontSizeLabel').innerText =
+                    getText('fontSize');
+
+                document.getElementById('saveBtn').innerText =
+                    getText('save');
+            }
+
+            // Встановлюємо іконку теми при завантаженні
+            updateThemeBtn(
+                localStorage.getItem('theme') || 'light'
+            );
+
+            // Завантаження налаштувань
+            applySettings();
+
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
