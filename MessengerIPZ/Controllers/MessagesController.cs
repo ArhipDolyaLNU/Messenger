@@ -48,7 +48,7 @@ namespace MessengerIPZ.Controllers
                 ChannelId = model.ChannelId,
                 UserId = user.Id,
                 Content = model.Content,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
             };
 
             _context.Messages.Add(message);

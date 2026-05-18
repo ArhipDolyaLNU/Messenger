@@ -87,6 +87,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
         const API = "/api";
@@ -98,17 +99,63 @@
             .withAutomaticReconnect()
             .build();
 
-        connection.on("ReceiveMessage", function (sender, content) {
-            appendMessageToScreen(sender, content);
+        connection.on("ReceiveMessage", function (sender, content, timestamp) {
+            const secret_key = "my_secret_key";
+            const bytes = CryptoJS.AES.decrypt(content, secret_key);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+            appendMessageToScreen(sender, decrypted, timestamp);
         });
 
         connection.start().then(() => loadChannels());
 
-        function appendMessageToScreen(sender, content) {
+        function formatMessageTime(date) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+    
+            const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+            const timeStr = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    
+            if (msgDay.getTime() === today.getTime()) {
+                return `Сьогодні ${timeStr}`;
+            } else if (msgDay.getTime() === yesterday.getTime()) {
+                return `Вчора ${timeStr}`;
+            } else {
+                const dateStr = date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                return `${dateStr} ${timeStr}`;
+            }
+        }
+
+        function parseUtcDate(timeString) {
+            if (!timeString) return new Date();
+    
+            let normalized = timeString.toString().replace(' ', 'T');
+    
+            normalized = normalized.replace(/(\.\d{3})\d+/, '$1');
+    
+            if (!normalized.endsWith('Z') && !normalized.includes('+')) {
+                normalized += 'Z';
+            }
+    
+            return new Date(normalized);
+        }
+
+        function appendMessageToScreen(sender, content, timeString) {
+            const date = timeString ? parseUtcDate(timeString) : new Date();
+            const timeFormatted = formatMessageTime(date);
+
             const box = document.getElementById("messagesBox");
             const div = document.createElement("div");
+    
             div.className = sender === currentUserName ? "msg-item my-msg" : "msg-item";
-            div.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            div.innerHTML = `
+                <strong>${sender}:</strong> ${content} 
+                <span style="font-size: 0.75em; color: #FFFFFF; float: right; margin-left: 15px; margin-top: 3px;">
+                    ${timeFormatted}
+                </span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -160,6 +207,8 @@
         }
 
         async function loadMessages() {
+            const secret_key = "my_secret_key";
+
             const res = await fetch(API + "/messages/" + currentChannelId);
             const box = document.getElementById("messagesBox");
             const input = document.getElementById("messageInput");
@@ -174,7 +223,12 @@
             input.disabled = btn.disabled = false;
             const data = await res.json();
             box.innerHTML = "";
-            data.forEach(m => appendMessageToScreen(m.senderName, m.content));
+            data.forEach(item => {
+                const bytes = CryptoJS.AES.decrypt(item.content, secret_key);
+                const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+                appendMessageToScreen(item.senderName, decrypted, item.timestamp);
+            });
         }
 
         const emojiMap = {
@@ -203,10 +257,13 @@
         }
 
         async function sendMessage() {
+            const secret_key = "my_secret_key";
             const input = document.getElementById("messageInput");
             if (!currentChannelId || !input.value.trim()) return;
 
-            const finalMessage = replaceEmojis(input.value);
+            const preFinalMessage = replaceEmojis(input.value);
+
+            const finalMessage = CryptoJS.AES.encrypt(preFinalMessage, secret_key).toString();
 
             await fetch(API + "/messages", {
                 method: "POST",
