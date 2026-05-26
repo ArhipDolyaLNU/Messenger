@@ -52,6 +52,13 @@ namespace MessengerIPZ.Controllers
                 return Unauthorized("Invalid login");
             }
 
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user != null)
+            {
+                user.IsOnline = true;
+                await _userManager.UpdateAsync(user);
+            }
+
             return Ok("Logged in");
         }
 
@@ -59,6 +66,14 @@ namespace MessengerIPZ.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                user.IsOnline = false;
+                user.LastSeen = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+            }
+
             await _signInManager.SignOutAsync();
             return Ok("Logged out");
         }

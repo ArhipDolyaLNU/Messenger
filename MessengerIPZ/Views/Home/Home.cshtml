@@ -86,6 +86,11 @@
 
         <div id="channelsList"></div>
 
+        <h4 id="usersTitle" class="mb-3 mt-4 text-primary">
+            Користувачі
+        </h4>
+        <div id="usersList"></div>
+
     </div>
 
     <div class="chat-panel">
@@ -101,7 +106,14 @@
              class="messages-box shadow-sm">
         </div>
 
-        <div class="input-group shadow-sm">
+        <div class="input-group shadow-sm position-relative">
+            <div id="emojiPicker" class="d-none rounded p-2 position-absolute shadow"
+                 style="background-color: var(--card-bg); border: 1px solid var(--border-color); bottom: 100%; left: 0; z-index: 1000; width: 220px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 5px;">
+            </div>
+
+            <button class="btn btn-outline-secondary" type="button" id="emojiBtn" onclick="toggleEmojiPicker()" disabled>
+                😀
+            </button>
 
             <input type="text"
                    id="messageInput"
@@ -113,9 +125,7 @@
                     id="sendBtn"
                     onclick="sendMessage()"
                     disabled>
-
                 >
-
             </button>
 
         </div>
@@ -148,6 +158,8 @@
             applyHomeTranslations();
 
             loadChannels();
+
+            loadUsers();
 
         });
         function applyHomeTranslations() {
@@ -295,14 +307,17 @@
             const box = document.getElementById("messagesBox");
             const input = document.getElementById("messageInput");
             const btn = document.getElementById("sendBtn");
+            const emojiBtn = document.getElementById("emojiBtn");
 
             if(!res.ok) {
                 box.innerHTML = "<div class='text-center m-auto text-muted'>Вступіть у канал, щоб бачити листування</div>";
-                input.disabled = btn.disabled = true;
+                input.disabled = btn.disabled = emojiBtn.disabled = true;
                 return;
             }
 
-            input.disabled = btn.disabled = false;
+
+
+            input.disabled = btn.disabled = emojiBtn.disabled = false;
             const data = await res.json();
             box.innerHTML = "";
             data.forEach(item => {
@@ -338,6 +353,35 @@
             return processedText;
         }
 
+        function toggleEmojiPicker() {
+            document.getElementById("emojiPicker").classList.toggle("d-none");
+        }
+
+        function initEmojiPicker() {
+            const picker = document.getElementById("emojiPicker");
+
+            const emojis = ["😁", "😃", "😟", "😢", "😉",  "❤️",  "😛", "😆", "😕", "👍", "🔥", "😂", "😎", "🎉", "👀"];
+
+            emojis.forEach(emoji => {
+                const span = document.createElement("span");
+                span.innerText = emoji;
+                span.style.cursor = "pointer";
+                span.style.fontSize = "1.4rem";
+                span.style.userSelect = "none";
+
+                span.onclick = () => {
+                    const input = document.getElementById("messageInput");
+                    input.value += emoji;
+                    input.focus();
+                    picker.classList.add("d-none");
+                };
+
+                picker.appendChild(span);
+            });
+        }
+
+        initEmojiPicker();
+
         async function sendMessage() {
             const secret_key = "my_secret_key";
             const input = document.getElementById("messageInput");
@@ -357,5 +401,54 @@
         }
 
         document.getElementById("messageInput").addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
+
+        async function loadUsers() {
+            const res = await fetch(API + "/auth/users");
+            if (!res.ok) return;
+
+            const data = await res.json();
+            const list = document.getElementById("usersList");
+            list.innerHTML = "";
+
+            data.forEach(u => {
+                const div = document.createElement("div");
+                div.className = "channel-item";
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><b>👤 ${u.userName}</b></span>
+                        <span class="badge ${u.isOnline ? 'bg-success' : 'bg-secondary'}">
+                            ${u.isOnline ? 'Online' : 'Offline'}
+                        </span>
+                    </div>
+
+                    <div class="mt-2 d-flex gap-1">
+                        <button class="btn btn-sm btn-primary flex-grow-1"
+                                onclick="startPrivateChat('${u.id}', '${u.userName}')">
+                            Написати
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function startPrivateChat(targetUserId, targetUserName) {
+            const res = await fetch(API + "/channels/private", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ targetUserIds: [targetUserId] })
+            });
+
+            if (res.ok) {
+                const channel = await res.json();
+
+                openChannel(channel.id, "Приват: " + targetUserName);
+
+                loadChannels();
+            } else {
+                const error = await res.text();
+                alert("Помилка створення приватного чату: " + error);
+            }
+        }
     </script>
 }
